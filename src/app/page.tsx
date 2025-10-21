@@ -6,9 +6,27 @@ import WhoToFollow from "@/components/WhoToFollow";
 import { currentUser } from "@clerk/nextjs/server";
 
 export default async function Home() {
-  const user = await currentUser();
-  const posts = await getPosts();
-  const dbUserId = await getDbUserId();
+  let user = null;
+  let posts: any[] = [];
+  let dbUserId = null;
+
+  try {
+    user = await currentUser();
+  } catch (err) {
+    console.error("Error fetching currentUser:", err);
+  }
+
+  try {
+    posts = (await getPosts()) || [];
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+  }
+
+  try {
+    dbUserId = await getDbUserId();
+  } catch (err) {
+    console.error("Error fetching DB user ID:", err);
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
@@ -16,9 +34,13 @@ export default async function Home() {
         {user ? <CreatePost /> : null}
 
         <div className="space-y-6">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} dbUserId={dbUserId} />
-          ))}
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} dbUserId={dbUserId} />
+            ))
+          ) : (
+            <p className="text-gray-500">No posts to show.</p>
+          )}
         </div>
       </div>
 
@@ -28,3 +50,4 @@ export default async function Home() {
     </div>
   );
 }
+  
